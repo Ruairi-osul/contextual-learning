@@ -1,0 +1,7 @@
+*.egg*
+data
+__pycache__
+*.Rproj*
+.vscode
+.mypy*
+.Rhis*
