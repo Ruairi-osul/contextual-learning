@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.pipeline import Pipeline
 from sklearn.base import BaseEstimator, TransformerMixin
 from spiketimes.df.binning import which_bin
-from .resample import downsample
+from context_analysis.resample import downsample
 
 
 class PivotTransformer(BaseEstimator, TransformerMixin):
