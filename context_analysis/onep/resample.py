@@ -7,7 +7,7 @@ def downsample(
     new_interval: str,
     time_col="time",
     grouping_cols: Optional[List[str]] = None,
-):
+) -> pd.DataFrame:
     df["time"] = pd.to_timedelta(df[time_col], unit="s")
     df = df.set_index(time_col)
     if grouping_cols is not None:
