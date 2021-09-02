@@ -39,11 +39,3 @@ def align_to_block(
     df = df.loc[df["bin_idx"] <= max_idx]
     return df
 
-
-def split_by_group(
-    df: pd.DataFrame, group_col: str = "group"
-) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    exp_df = df.loc[df[group_col] == "Experimental"]
-    one_ctx_df = df.loc[df[group_col] == "One Context"]
-    no_shock_df = df.loc[df[group_col] == "No Shock"]
-    return exp_df, one_ctx_df, no_shock_df
