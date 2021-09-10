@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Union
 import pandas as pd
 import numpy as np
 from sklearn.pipeline import Pipeline
@@ -168,3 +168,40 @@ def remove_mixed_ys(X: pd.DataFrame, y: pd.Series) -> Tuple[pd.DataFrame, pd.Ser
     X = X[y != "mixed"]
     y = y[y != "mixed"]
     return X, y
+
+
+def get_block_index(time_array: Union[np.ndarray, pd.Series]) -> np.ndarray:
+    """Get the index for the block at each time point
+
+    Args:
+        time_array (Union[np.ndarray, pd.Series]): Array of time values
+        session_name (str): Name of session
+
+    Returns:
+        Union[np.ndarray, pd.Series]: Array of block indexes (one for each value in input array)
+    """
+    block_starts = [120 * i for i in range(1, 7)]
+    out = np.empty((len(time_array), len(block_starts)))
+    for i, block_start in enumerate(block_starts):
+        out[:, i] = np.greater(time_array, block_start)
+    idx = np.sum(out, axis=1)
+    return idx
+
+
+def bin_blocks(
+    time_array: Union[np.ndarray, pd.Series], block_length: int, num_parts: int
+) -> np.ndarray:
+    """Break blocks into equally-sized bins
+
+    Args:
+        time_array (Union[np.ndarray, pd.Series]): Array of time values. Does not need to be in order.
+        block_length (int): Length of blocks
+        num_parts (int): Number of bins into which blocks will be broken
+
+    Returns:
+        np.ndarray: Array of block segments
+    """
+    fractional_part, _ = np.modf(np.divide(time_array, block_length))
+    bins = [(1 / num_parts) * i for i in range(num_parts)]
+    block_segments = np.digitize(fractional_part, bins, right=False)
+    return block_segments
