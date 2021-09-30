@@ -1,5 +1,6 @@
 from typing import Optional, List
 import pandas as pd
+import numpy as np
 from pathlib import Path
 import context_analysis.utils
 import warnings
@@ -124,6 +125,27 @@ def load_traces(
     return df
 
 
+def load_spike_proba(
+    experiment: str,
+    session_names: List[str],
+    mouse_names: Optional[List[str]] = None,
+    group_names: Optional[List[str]] = None,
+    data_dir: Optional[Path] = None,
+    warn_on_missing: bool = True,
+) -> pd.DataFrame:
+    df = _load_datafile(
+        file_name="CASCADE_traces",
+        experiment=experiment,
+        session_names=session_names,
+        mouse_names=mouse_names,
+        group_names=group_names,
+        data_dir=data_dir,
+        warn_on_missing=warn_on_missing,
+        unpivot=True,
+    )
+    return df
+
+
 def load_spikes(
     experiment: str,
     session_names: List[str],
@@ -152,6 +174,7 @@ def _load_datafile(
     group_names: Optional[List[str]] = None,
     data_dir: Optional[Path] = None,
     warn_on_missing: bool = True,
+    unpivot: bool = False,
 ):
     if data_dir is None:
         data_dir = context_analysis.utils.get_default_data_dir()
@@ -168,13 +191,24 @@ def _load_datafile(
                 msg = str(data_path) + " is missing"
                 warnings.warn(msg)
             continue
-        df_list.append(pd.read_parquet(data_path).assign(session_name=session_name))
+        df = pd.read_parquet(data_path).assign(session_name=session_name)
+        if unpivot:
+            if "session_name" in df.columns:
+                df.drop("session_name", axis=1, inplace=True)
+            df = df.reset_index().melt(id_vars=[df.index.name], var_name="cell_id")
+            df["value"] = df["value"].astype(np.float64)
+        df_list.append(df)
 
     df = pd.concat(df_list)
-    if mouse_names is not None:
-        df = df.loc[df["mouse"].isin(mouse_names)]
 
-    df_cells = load_cells(experiment="", group_names=group_names, data_dir=data_dir)
+    df_cells = load_cells(
+        experiment="", group_names=group_names, data_dir=data_dir
+    ).loc[lambda x: x.session_name == session_name]
+    df_cells = df_cells[["mouse", "cell_id", "session_name", "group"]].drop_duplicates()
+    df["cell_id"] = df["cell_id"].astype(str)
+    df_cells["cell_id"] = df_cells["cell_id"].astype(str)
     df = df.merge(df_cells)
     df["cell_id"] = pd.Categorical(df["cell_id"])
+    if mouse_names is not None:
+        df = df.loc[df["mouse"].isin(mouse_names)]
     return df
