@@ -166,3 +166,18 @@ ggplot(df_d5, aes(x = slope_estimate)) +
   theme_Publication() +
   labs(y = "Marginal Effect of Shock-Associated\nContext on Spike Counts", x =
          "Regression Coeffcient")
+
+
+######
+
+df_res <- df1 %>%
+  group_by(cell_id) %>%
+  do(tidy(lm(spiketimes ~ context, data=., REML=F)))
+
+df_res %>%
+  filter(term=="contextscary") %>%
+  mutate(p_adj = p.adjust(p.value)) %>%
+  left_join(distinct(select(df, cell_id, group))) %>%
+  group_by(group) %>%
+  summarise(m = mean(p_adj < 0.05))
+  

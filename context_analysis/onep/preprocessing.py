@@ -80,6 +80,12 @@ def block_from_time(
     return y
 
 
+def block_from_index(df: pd.DataFrame, session_name: str) -> pd.DataFrame:
+    df = align_to_block(df, session_name, df.index)
+    y = df["block"]
+    return y
+
+
 def get_pivoted_X(
     df: pd.DataFrame,
     downsample_interval: str,

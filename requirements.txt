@@ -1,3 +1,7 @@
 matplotlib
 pandas
 jupyter
+pmdarima
+scikit-learn
+seaborn
+statsmodels
